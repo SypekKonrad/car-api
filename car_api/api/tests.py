@@ -1,13 +1,10 @@
-from rest_framework.test import APIClient
 from rest_framework import status
-from django.test import TestCase
 from unittest.mock import patch
 from .models import Car, Rating
+from rest_framework.test import APITestCase
 
 
-class CarsPostTestCase(TestCase):
-    def setUp(self):
-        self.client = APIClient()
+class CarsTestCase(APITestCase):
 
     @patch('requests.get')
     def test_cars_post_success(self, mock_get):
@@ -38,11 +35,24 @@ class CarsPostTestCase(TestCase):
         response = self.client.post('/cars/', {'make': 'Toyota', 'model': 'Prius'})
 
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+    def test_cars_get_success(self):
+        car1 = Car.objects.create(make="Toyota", model="Prius")
+        car2 = Car.objects.create(make="Toyota", model="Camry")
+        Rating.objects.create(car=car1, rating=4)
+        Rating.objects.create(car=car1, rating=5)
+        Rating.objects.create(car=car2, rating=3)
 
+        response = self.client.get('/cars/')
 
-class RateTestCase(TestCase):
-    def setUp(self):
-        self.client = APIClient()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        expected_data = [
+            {'id': car1.id, 'make': car1.make, 'model': car1.model, 'average_rating': 4.5},
+            {'id': car2.id, 'make': car2.make, 'model': car2.model, 'average_rating': 3.0}
+        ]
+        self.assertEqual(response.data, expected_data)
+
+class RateTestCase(APITestCase):
 
     def test_rate_valid_data(self):
         car = Car.objects.create(make='Toyota', model='Prius')
@@ -60,4 +70,7 @@ class RateTestCase(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('rating', response.data)
+
+
+
 

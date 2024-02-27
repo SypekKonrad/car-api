@@ -1,46 +1,55 @@
 from django.shortcuts import render
 from rest_framework import status
 from rest_framework.decorators import api_view
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from .serializers import CarSerializer, RatingSerializer
-from .models import Car
+from .models import Car, Rating
 import requests
+from django.db.models import Avg
 
-#todo usunac test
-@api_view()
-def test(request):
-    return Response({"message": "test"})
+class Cars(APIView):
+    def post(self, request):
+        make = request.data.get('make')
+        model = request.data.get('model')
+        serializer = CarSerializer(data={'make': make, 'model': model})
+        url = f"https://vpic.nhtsa.dot.gov/api/vehicles/getmodelsformake/{make.lower()}?format=json"
 
-@api_view(['POST'])
-def cars_post(request):
-    make = request.data.get('make')
-    model = request.data.get('model')
-    serializer = CarSerializer(data={'make': make, 'model': model})
-    url = f"https://vpic.nhtsa.dot.gov/api/vehicles/getmodelsformake/{make.lower()}?format=json"
+        response = requests.get(url)
+        print('response:', response.text)
 
-    response = requests.get(url)
-    print('response:', response.text)
+        if response.status_code == 200:
+            data = response.json()
+            results = data.get('Results', [])
+            car_exists = any(
+                result['Make_Name'].lower() == make.lower() and result['Model_Name'].lower() == model.lower() for result
+                in results)
 
-    if response.status_code == 200:
-        data = response.json()
-        results = data.get('Results', [])
-        car_exists = any(result['Make_Name'].lower() == make.lower() and result['Model_Name'].lower() == model.lower() for result in results)
+            if car_exists:
+                serializer = CarSerializer(data={'make': make, 'model': model})
 
-        if car_exists:
-            serializer = CarSerializer(data={'make': make, 'model': model})
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-            if serializer.is_valid():
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({'error': f'No records found for {make} {model}'}, status=status.HTTP_400_BAD_REQUEST)
 
         else:
-            return Response({'error': f'No records found for {make} {model}'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Failed to retrieve data from external API'}, status=response.status_code)
 
-    else:
-        return Response({'error': 'Failed to retrieve data from external API'}, status=response.status_code)
+    def get(self, request):
+        cars = Car.objects.all()
+
+        for car in cars:
+            car.average_rating = Rating.objects.filter(car=car).aggregate(Avg('rating'))['rating__avg']
+
+        serializer = CarSerializer(cars, many=True)
+        return Response(serializer.data)
+
+
 
 @api_view(['POST'])
 def rate(request):
@@ -72,3 +81,39 @@ def rate(request):
     #     },
     #     "rating": 1
     # }
+
+
+
+
+
+
+# @api_view(['POST'])
+# def cars_post(request):
+#     make = request.data.get('make')
+#     model = request.data.get('model')
+#     serializer = CarSerializer(data={'make': make, 'model': model})
+#     url = f"https://vpic.nhtsa.dot.gov/api/vehicles/getmodelsformake/{make.lower()}?format=json"
+#
+#     response = requests.get(url)
+#     print('response:', response.text)
+#
+#     if response.status_code == 200:
+#         data = response.json()
+#         results = data.get('Results', [])
+#         car_exists = any(result['Make_Name'].lower() == make.lower() and result['Model_Name'].lower() == model.lower() for result in results)
+#
+#         if car_exists:
+#             serializer = CarSerializer(data={'make': make, 'model': model})
+#
+#             if serializer.is_valid():
+#
+#                 serializer.save()
+#                 return Response(serializer.data, status=status.HTTP_201_CREATED)
+#
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#
+#         else:
+#             return Response({'error': f'No records found for {make} {model}'}, status=status.HTTP_400_BAD_REQUEST)
+#
+#     else:
+#         return Response({'error': 'Failed to retrieve data from external API'}, status=response.status_code)
