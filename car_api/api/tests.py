@@ -71,6 +71,50 @@ class RateTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('rating', response.data)
 
+class PopularTestCase(APITestCase):
+
+    def test_popular_get_success(self):
+        toyota_camry = Car.objects.create(make='Toyota', model='Camry')
+        toyota_avalon = Car.objects.create(make='Toyota', model='Avalon')
+        toyota_prius = Car.objects.create(make='Toyota', model='Prius')
+
+        Rating.objects.create(car=toyota_avalon, rating=4)
+
+        for i in range(2):
+            Rating.objects.create(car=toyota_camry, rating=5)
+
+        response = self.client.get('/cars/')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+
+        self.assertEqual(len(data), 3)
+
+        expected_car_data = [
+            ('Toyota', 'Camry'),
+            ('Toyota', 'Avalon'),
+            ('Toyota', 'Prius')
+        ]
+
+        for i, (expected_make, expected_model) in enumerate(expected_car_data):
+            self.assertEqual(data[i]['make'], expected_make)
+            self.assertEqual(data[i]['model'], expected_model)
+
+        num_ratings_camry = Rating.objects.filter(car=toyota_camry).count()
+        num_ratings_avalon = Rating.objects.filter(car=toyota_avalon).count()
+        num_ratings_prius = Rating.objects.filter(car=toyota_prius).count()
+
+        self.assertEqual(num_ratings_camry, 2)
+        self.assertEqual(num_ratings_avalon, 1)
+        self.assertEqual(num_ratings_prius, 0)
+
+
+
+
+
+
+
+
 
 
 

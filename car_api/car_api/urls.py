@@ -16,12 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from api.views import Cars, rate
+from api.views import Cars, rate, Popular
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # path('cars/', cars, name='cars_post'),
     path('cars/', Cars.as_view(), name='cars'),
     path('rate/', rate, name='rate'),
+    path('popular/', Popular.as_view(), name='popular_car_list'),
 ]
