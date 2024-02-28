@@ -10,10 +10,10 @@ from django.db.models import Avg, Count
 class Cars(APIView):
 
     def post(self, request):
-        make = request.POST.get('make')
-        model = request.POST.get('model')
+        make = request.data.get('make')
+        model = request.data.get('model')
         serializer = CarSerializer(data={'make': make, 'model': model})
-        print(request.POST)
+        # print(request.POST)
 
         # url = f"https://vpic.nhtsa.dot.gov/api/vehicles/getmodelsformake/{make.lower()}?format=json"
         url = f"https://vpic.nhtsa.dot.gov/api/vehicles/getmodelsformake/{make}?format=json"
@@ -73,10 +73,6 @@ class Popular(generics.ListAPIView):
     queryset = Car.objects.annotate(num_ratings=Count('ratings')).order_by('-num_ratings')
     serializer_class = CarSerializer
 
-{
-    "make": "Toyota",
-    "model": "Prius"
-}
 
 
 
