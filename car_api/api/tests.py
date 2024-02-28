@@ -19,6 +19,20 @@ class CarsTestCase(APITestCase):
         self.assertTrue(Car.objects.filter(make='Toyota', model='Prius').exists())
 
     @patch('requests.get')
+    def test_cars_post_duplicate(self, mock_get):
+        existing_car = Car.objects.create(make='Toyota', model='Prius')
+
+        mock_get.return_value.status_code = 200
+        mock_get.return_value.json.return_value = {
+            'Results': [{'Make_Name': 'Toyota', 'Model_Name': 'Prius'}]
+        }
+
+        response = self.client.post('/cars/', {'make': 'Toyota', 'model': 'Prius'})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['error'], 'Car already exists')
+
+    @patch('requests.get')
     def test_cars_post_failure_nonexistent_car(self, mock_get):
         mock_get.return_value.status_code = 200
         mock_get.return_value.json.return_value = {'Results': []}
