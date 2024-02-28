@@ -8,10 +8,12 @@ import requests
 from django.db.models import Avg, Count
 
 class Cars(APIView):
+
     def post(self, request):
         make = request.data.get('make')
         model = request.data.get('model')
         serializer = CarSerializer(data={'make': make, 'model': model})
+        print(request.data)
 
         # url = f"https://vpic.nhtsa.dot.gov/api/vehicles/getmodelsformake/{make.lower()}?format=json"
         url = f"https://vpic.nhtsa.dot.gov/api/vehicles/getmodelsformake/{make}?format=json"
