@@ -1,4 +1,7 @@
 db.sqlite3
+staticfiles
 __pycache__
 venv
 .idea/
+.DS_Store
+
