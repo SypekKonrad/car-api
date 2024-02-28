@@ -1,3 +1,5 @@
+hosted at: http://3.79.107.161
+
 ## Technology Stack
 * Django 
 * Django Rest Framework
