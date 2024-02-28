@@ -12,7 +12,9 @@ class Cars(APIView):
         make = request.data.get('make')
         model = request.data.get('model')
         serializer = CarSerializer(data={'make': make, 'model': model})
-        url = f"https://vpic.nhtsa.dot.gov/api/vehicles/getmodelsformake/{make.lower()}?format=json"
+
+        # url = f"https://vpic.nhtsa.dot.gov/api/vehicles/getmodelsformake/{make.lower()}?format=json"
+        url = f"https://vpic.nhtsa.dot.gov/api/vehicles/getmodelsformake/{make}?format=json"
 
         response = requests.get(url)
 
@@ -20,7 +22,8 @@ class Cars(APIView):
             data = response.json()
             results = data.get('Results', [])
             car_exists = any(
-                result['Make_Name'].lower() == make.lower() and result['Model_Name'].lower() == model.lower() for result
+                # result['Make_Name'].lower() == make.lower() and result['Model_Name'].lower() == model.lower() for result
+                result['Make_Name'] == make and result['Model_Name'] == model for result
                 in results)
 
             if Car.objects.filter(make=make, model=model).exists():
@@ -72,4 +75,6 @@ class Popular(generics.ListAPIView):
     "make": "Toyota",
     "model": "Prius"
 }
+
+
 
