@@ -15,7 +15,6 @@ class Cars(APIView):
         serializer = CarSerializer(data={'make': make, 'model': model})
         # print(request.POST)
 
-        # url = f"https://vpic.nhtsa.dot.gov/api/vehicles/getmodelsformake/{make.lower()}?format=json"
         url = f"https://vpic.nhtsa.dot.gov/api/vehicles/getmodelsformake/{make}?format=json"
 
         response = requests.get(url)
@@ -24,7 +23,6 @@ class Cars(APIView):
             data = response.json()
             results = data.get('Results', [])
             car_exists = any(
-                # result['Make_Name'].lower() == make.lower() and result['Model_Name'].lower() == model.lower() for result
                 result['Make_Name'] == make and result['Model_Name'] == model for result
                 in results)
 
@@ -41,16 +39,19 @@ class Cars(APIView):
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
             else:
-                return Response({'error': f'No records found for {make} {model}'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error': f'No records found for {make} {model}'}, status=status.HTTP_404_NOT_FOUND)
 
         else:
             return Response({'error': 'Failed to retrieve data from external API'}, status=response.status_code)
 
     def get(self, request):
+
         cars = Car.objects.all()
 
         for car in cars:
             car.average_rating = Rating.objects.filter(car=car).aggregate(Avg('rating'))['rating__avg']
+            if car.average_rating is not None:
+                car.average_rating = round(car.average_rating, 2)
 
         serializer = CarSerializer(cars, many=True)
         return Response(serializer.data)
@@ -74,5 +75,8 @@ class Popular(generics.ListAPIView):
     serializer_class = CarSerializer
 
 
-
+{
+    "car": 4,
+    "rating": 4
+}
 
