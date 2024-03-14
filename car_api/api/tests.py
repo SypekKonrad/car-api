@@ -39,7 +39,7 @@ class CarsTestCase(APITestCase):
 
         response = self.client.post('/cars/', {'make': 'FSO', 'model': 'Polonez'})
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertFalse(Car.objects.filter(make='FSO', model='Polonez').exists())
 
     @patch('requests.get')
