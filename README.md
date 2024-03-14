@@ -18,13 +18,13 @@ SQLite is a lightweight, serverless, and self-contained database engine that req
 To run this project:
 
 ```
-$ git clone https://github.com/SypekKonrad/car-api.git
+git clone https://github.com/SypekKonrad/car-api.git
 ```
 ```
-$ cd car-api
+cd car-api
 ```
 ```
-$ bash app_build.sh
+bash app_build.sh
 ```
 
 ## Endpoints
