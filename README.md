@@ -1,4 +1,4 @@
-hosted at: http://3.79.107.161
+hosted at: 
 
 # Car API Documentation
 Welcome to the Car API documentation. This API allows you to manage cars and their ratings.
