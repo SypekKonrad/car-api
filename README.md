@@ -31,6 +31,7 @@ bash app_build.sh
 
 ### POST /cars
 This endpoint allows you to add a new car to the database based on its make and model name.
+The make and model are validated using the [NHTSA Vehicle API](https://vpic.nhtsa.dot.gov/api/).
 
 Request Body:
 ```
@@ -52,7 +53,7 @@ This endpoint allows you to add a rating for a car from 1 to 5.
 Request Body:
 ```
 {
-    "car_id": "integer",
+    "car": "integer (Car ID)",
     "rating": "integer (1-5)"
 }
 ```
@@ -88,7 +89,6 @@ Response:
         "id": "integer",
         "make": "string",
         "model": "string",
-        "number_of_ratings": "integer"
     },
 ]
 
